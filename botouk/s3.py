@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 from .base import Service, ResourceMixIn
 
@@ -58,3 +59,33 @@ class S3(Service, ResourceMixIn):
             **kwargs
         )
         return Response(res)
+
+    def put_object_function(self, bucket_name, prefix=None, raise_exc=False):
+        bucket = self.bucket(bucket_name)
+
+        def upload(file=None, key=None, source=None):
+            key = key or os.path.basename(file)
+            filekey = f"{prefix}/{key}" if prefix else key
+            logger.info(f">> Upload file to S3: s3://{bucket_name}/{filekey}")
+            try:
+                obj = bucket.Object(filekey)
+
+                if source:
+                    res = obj.put(Body=source)
+                elif file:
+                    res = obj.upload_file(file)
+                else:
+                    logger.warning('Nothing to upload to s3')
+                    res = None
+
+            except Exception as e:
+                logger.warning(f"Failed to upload file:"
+                               f" s3://{bucket_name}/{filekey} : {e.args}")
+                if raise_exc:
+                    raise e
+
+                res = None
+
+            return res
+
+        return upload
