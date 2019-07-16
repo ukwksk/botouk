@@ -44,7 +44,8 @@ class S3(Service, ResourceMixIn):
                 self.body = response
                 self.metadata = response['ResponseMetadata']
                 self.is_truncated = response['IsTruncated']
-                self.contents = [Content(c) for c in response['Contents']]
+                self.contents = [Content(c) for c
+                                 in response.get('Contents', [])]
                 self.name = response['Name']
                 self.prefix = response['Prefix']
                 self.key_count = response['KeyCount']
